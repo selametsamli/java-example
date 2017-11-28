@@ -39,8 +39,8 @@ public class NotOge {
         this.bitisTarih = bitisTarih;
     }
 
-    @Override
+   /* @Override
     public String toString() {
         return baslik;
-    }
+    }*/
 }

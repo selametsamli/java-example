@@ -1,5 +1,8 @@
 package selametsamli;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -17,7 +20,7 @@ public class NotData {
     private static String dosyaAdi="notlarListesi.txt";
     private DateTimeFormatter formatter;
 
-    private ArrayList<NotOge> notListesi;
+    private ObservableList<NotOge> notListesi;
 
     private NotData(){//Constructor
         formatter=DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -28,16 +31,16 @@ public class NotData {
         return instance;
     }
 
-    public ArrayList<NotOge> getNotListesi() {
+    public ObservableList<NotOge> getNotListesi() {
         return notListesi;
     }
 
-    public void setNotListesi(ArrayList<NotOge> notListesi) {
+    public void setNotListesi(ObservableList<NotOge> notListesi) {
         this.notListesi = notListesi;
     }
     public void notlariDosyadanGetir() throws IOException {
 
-        notListesi=new ArrayList<>();
+        notListesi= FXCollections.observableArrayList(); //new ArrayList demekle aynı
 
         Path dosyaYolu= Paths.get(dosyaAdi);
         BufferedReader br= Files.newBufferedReader(dosyaYolu);
@@ -95,4 +98,9 @@ public class NotData {
         notListesi.add(yeniNot);
     }
 
+    public void notuSil(NotOge silinecekOge) {
+
+        notListesi.remove(silinecekOge);
+
+    }
 }

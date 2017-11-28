@@ -12,7 +12,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -28,17 +30,37 @@ public class Main extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
+
+
+
+
+
         BorderPane borderPane =new BorderPane();
 
         ListView lvNotlarListesi=new ListView();
         borderPane.setLeft(lvNotlarListesi);//ListView sol kısma ekliyoruz.
         TextArea taNotDetay=new TextArea();
+        taNotDetay.setWrapText(true);
         Label lBitisTarihi=new Label("Bitiş Tarihi: ");
         Label BitisTarihi=new Label("   ");
         HBox hBox=new HBox(lBitisTarihi,BitisTarihi);
         VBox vBox=new VBox(taNotDetay,hBox);
         vBox.setVgrow(taNotDetay, Priority.ALWAYS);
         borderPane.setCenter(vBox);
+        ContextMenu listviewContextMenu=new ContextMenu();
+
+
+        MenuItem notSil=new MenuItem("Notu Sil");
+        notSil.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                NotOge silinecekOge= (NotOge) lvNotlarListesi.getSelectionModel().getSelectedItem();
+                notsil(silinecekOge);
+            }
+        });
+
+        listviewContextMenu.getItems().setAll(notSil);
 
 
 
@@ -80,6 +102,7 @@ public class Main extends Application{
 
         TextArea LNDtextField=new TextArea();
         gridPane.add(LNDtextField,1,1);
+        LNDtextField.setWrapText(true);
 
         Label lBtsTarihi=new Label("Bitiş Tarihi");
         gridPane.add(lBtsTarihi,0,2);
@@ -93,6 +116,10 @@ public class Main extends Application{
             @Override
             public void handle(ActionEvent event) {
                 Dialog<ButtonType> dialog=new Dialog<>();
+
+                dialog.setTitle("Yeni Not");
+                dialog.setHeaderText("Yeni Notu giriniz.");
+
                 dialog.initOwner(borderPane.getScene().getWindow());//dialog kapanınca geri dönülecek kısmı belirtiyoruz.
                 dialog.getDialogPane().setContent(dialogPane);
 
@@ -108,7 +135,8 @@ public class Main extends Application{
                  Optional<ButtonType> sonuc=dialog.showAndWait();
                  if(sonuc.get()==ButtonType.OK){
                      NotOge yeniNot=yeniNotEkle();
-                     lvNotlarListesi.getItems().setAll(NotData.getInstance().getNotListesi());
+                     lvNotlarListesi.setItems(NotData.getInstance().getNotListesi());
+                     //lvNotlarListesi.getItems().setAll(NotData.getInstance().getNotListesi());
                      lvNotlarListesi.getSelectionModel().select(yeniNot);
                  }else if(sonuc.get()==ButtonType.CANCEL){
                      System.out.println("Cancel Basıldı");
@@ -129,7 +157,36 @@ public class Main extends Application{
                     return yeniNot;
             }
         });
+        lvNotlarListesi.setCellFactory(new Callback<ListView, ListCell>() {
+            @Override
+            public ListCell call(ListView param) {
+                System.out.println("Çalıştı");
+                ListCell<NotOge> cell=new ListCell<NotOge>(){
+                    @Override
+                    protected void updateItem(NotOge item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if(empty){
+                            setText(null);
+                        }else{
 
+                            setText(item.getBaslik());
+                            if(item.getBitisTarih().equals(LocalDate.now())){
+                                setTextFill(Color.GREEN);
+                            }else if (item.getBitisTarih().equals(LocalDate.now().plusDays(1))){
+                                setTextFill(Color.BLUE);
+                            }else if(item.getBitisTarih().isBefore(LocalDate.now())){
+                                setTextFill(Color.RED);
+                            }
+
+                        }
+                    }
+                };
+
+                cell.setContextMenu(listviewContextMenu);
+
+                return cell;
+            }
+        });
 
 
 
@@ -201,11 +258,15 @@ public class Main extends Application{
 
 
 
+
+
         Scene scene=new Scene(borderPane,900,700);
         primaryStage.setScene(scene);
         primaryStage.show();
 
     }
+
+
 
     @Override
     public void stop() throws Exception {
@@ -221,8 +282,19 @@ public class Main extends Application{
     public void init() throws Exception {
         NotData.getInstance().notlariDosyadanGetir();
     }
+    private void notsil(NotOge silinecekOge) {
 
+        Alert alert=new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Not Sil");
+        alert.setHeaderText("Silinecek Not: "+ silinecekOge.getBaslik());
+        alert.setContentText("Emin misiniz ?");
 
+        Optional<ButtonType> sonuc=alert.showAndWait();
 
+        if(sonuc.get()==ButtonType.OK){
+            NotData.getInstance().notuSil(silinecekOge);
+        }
+
+    }
 
 }
